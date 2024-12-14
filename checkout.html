@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout Page</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
+    }
+
+    .checkout-container {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 1000px;
+      padding: 30px;
+      overflow: hidden;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d3748;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 30px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+
+    table th, table td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 16px;
+      color: #2d3748;
+    }
+
+    table th {
+      background-color: #f7fafc;
+      font-weight: 600;
+    }
+
+    table td input[type="number"] {
+      width: 60px;
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    table td input[type="number"]:focus {
+      outline: none;
+      border-color: #4fd1c5;
+    }
+
+    /* Total Summary */
+    .total-summary {
+      font-size: 18px;
+      font-weight: 500;
+      text-align: right;
+      color: #2d3748;
+      margin-bottom: 30px;
+    }
+
+    .total-summary p {
+      margin: 5px 0;
+    }
+
+    .checkout-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .checkout-form div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .checkout-form label {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #2d3748;
+    }
+
+    .checkout-form input[type="text"], .checkout-form select {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #cbd5e0;
+      transition: border 0.3s ease;
+    }
+
+    .checkout-form input[type="text"]:focus, .checkout-form select:focus {
+      outline: none;
+      border-color: #4fd1c5;
+    }
+
+    /* Button */
+    button {
+      background-color: #4fd1c5;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #38b2ac;
+    }
+
+    #clearCartBtn {
+      background-color: #ed9595;
+      color: white;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 20px;
+      width: 100%;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #clearCartBtn:hover {
+      background-color: #c53030;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .checkout-container {
+        width: 95%;
+        padding: 20px;
+      }
+
+      h2 {
+        font-size: 1.5em;
+      }
+
+      .total-summary {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="checkout-container">
+  <h2>Checkout</h2>
+
+  <!-- Cart Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="cartBody">
+      <!-- Cart items will be dynamically inserted here -->
+    </tbody>
+  </table>
+
+  <!-- Total Summary -->
+  <div class="total-summary">
+    <p>Subtotal: ₹<span id="subtotal">0</span></p>
+    <p>Total (including shipping): ₹<span id="totalAmount">0</span></p>
+  </div>
+
+  <!-- Checkout Form -->
+  <form id="checkoutForm" class="checkout-form">
+    <div>
+      <label for="name">Full Name</label>
+      <input type="text" id="name" required />
+    </div>
+    <div>
+      <label for="address">Address</label>
+      <input type="text" id="address" required />
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input type="text" id="city" required />
+    </div>
+    <div>
+      <label for="zipcode">Zipcode</label>
+      <input type="text" id="zipcode" required />
+    </div>
+    <div>
+      <label for="payment">Payment Method</label>
+      <option value="Cash on delivery">Cash on delivery</option>
+      <!--<select id="payment" required>
+        <option value="credit">Credit Card</option>
+        <option value="debit">Debit Card</option>
+        <option value="paypal">PayPal</option>
+      </select>-->
+    </div>
+    <button type="submit">Place Order</button>
+  </form>
+
+  <!-- Clear Cart Button -->
+  <button id="clearCartBtn">Clear Cart</button>
+</div>
+
+<script>
+  // Initialize cart from local storage (if any)
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+  // Function to update the cart table and total amounts
+  function updateCart() {
+    const cartBody = document.getElementById('cartBody');
+    const subtotalElement = document.getElementById('subtotal');
+    const totalAmountElement = document.getElementById('totalAmount');
+    let subtotal = 0;
+
+    // Clear previous rows
+    cartBody.innerHTML = "";
+
+    // Loop through the cart items and add them to the table
+    cart.forEach(item => {
+      const row = document.createElement('tr');
+
+      const itemCell = document.createElement('td');
+      itemCell.textContent = item.name;
+      row.appendChild(itemCell);
+
+      const priceCell = document.createElement('td');
+      priceCell.textContent = `₹${item.price}`;
+      row.appendChild(priceCell);
+
+      const quantityCell = document.createElement('td');
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.value = item.quantity;
+      quantityInput.min = 1;
+      quantityInput.addEventListener('input', () => updateItemQuantity(item.id, quantityInput.value));
+      quantityCell.appendChild(quantityInput);
+      row.appendChild(quantityCell);
+
+      const totalCell = document.createElement('td');
+      totalCell.textContent = `₹${item.price * item.quantity}`;
+      row.appendChild(totalCell);
+
+      const removeCell = document.createElement('td');
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Remove';
+      removeButton.addEventListener('click', () => removeItemFromCart(item.id));
+      removeCell.appendChild(removeButton);
+      row.appendChild(removeCell);
+
+      cartBody.appendChild(row);
+
+      // Add to subtotal
+      subtotal += item.price * item.quantity;
+    });
+
+    // Update the subtotal and total amount (including shipping)
+    subtotalElement.textContent = subtotal;
+    totalAmountElement.textContent = subtotal + 50; // Adding shipping cost
+  }
+
+  // Function to update item quantity in the cart
+  function updateItemQuantity(itemId, newQuantity) {
+    const item = cart.find(item => item.id === itemId);
+    item.quantity = parseInt(newQuantity);
+    localStorage.setItem('cart', JSON.stringify(cart)); // Update local storage
+    updateCart(); // Recalculate and update the cart
+  }
+
+  // Function to remove an item from the cart
+  function removeItemFromCart(itemId) {
+    cart = cart.filter(item => item.id !== itemId); // Remove the item from the cart
+    localStorage.setItem('cart', JSON.stringify(cart)); // Update local storage
+    updateCart(); // Recalculate and update the cart display
+  }
+
+  // Checkout form submission handler
+  document.getElementById('checkoutForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('name').value;
+    const address = document.getElementById('address').value;
+    const city = document.getElementById('city').value;
+    const zipcode = document.getElementById('zipcode').value;
+    const payment = document.getElementById('payment').value;
+
+    alert(`Order placed!\nName: ${name} \nAddress: ${address}, ${city}, ${zipcode} \nPayment Method: ${payment}`);
+    localStorage.removeItem('cart'); // Clear cart after order
+    window.location.href = 'index.html'; // Redirect to home after order
+  });
+
+  // Clear cart function
+  document.getElementById('clearCartBtn').addEventListener('click', function() {
+    localStorage.removeItem('cart'); // Clear cart from local storage
+    cart = []; // Clear the cart array
+    updateCart(); // Update the cart display
+  });
+
+  // Initialize cart on page load
+  window.onload = updateCart;
+</script>
+
+
+<script>
+  function removeItem(itemId) {
+      const item = document.getElementById(itemId);
+      if (item) {
+          item.remove();
+      } else {
+          alert("Item not found!");
+      }
+  }
+</script>
+
+</body>
+</html>
